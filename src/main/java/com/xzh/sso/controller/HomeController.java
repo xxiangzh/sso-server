@@ -18,8 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class HomeController {
 
     @ApiOperation(value = "首页")
-    @GetMapping("/home")
+    @GetMapping
     public String home() {
         return "welcome home";
+    }
+
+    @ApiOperation(value = "演示")
+    @GetMapping("/demo")
+    public String demo() {
+        return "demo success";
     }
 }
