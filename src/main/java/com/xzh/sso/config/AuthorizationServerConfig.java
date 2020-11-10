@@ -1,19 +1,26 @@
 package com.xzh.sso.config;
 
+import com.xzh.sso.domain.LoginUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
+import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * 授权服务器配置
@@ -26,13 +33,19 @@ import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdapter {
 
     @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private RedisConnectionFactory redisConnectionFactory;
+
+    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
     /**
-     * 授权端点开放
+     * 配置令牌端点(Token Endpoint)的安全约束
      *
      * @param security
      */
@@ -75,28 +88,61 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
         endpoints
-                // 认证管理器
+                // 请求方式
+                .allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST)
+                // 用户账号密码认证
+                .userDetailsService(userDetailsService)
+                // 指定认证管理器
                 .authenticationManager(authenticationManager)
-                // Token转换器
-                .accessTokenConverter(jwtTokenConverter())
-                .tokenStore(jwtTokenStore());
+                // 指定token存储位置
+                .tokenStore(tokenStore())
+                // 自定义生成令牌
+                .tokenEnhancer(tokenEnhancer())
+                // JWT
+                .tokenEnhancer(jwtTokenConverter())
+                // 是否重复使用 refresh_token
+                .reuseRefreshTokens(false);
     }
 
+    /**
+     * 基于Redis实现，令牌保存到缓存
+     */
     @Bean
-    public TokenStore jwtTokenStore() {
-        return new JwtTokenStore(jwtTokenConverter());
+    public TokenStore tokenStore() {
+        RedisTokenStore tokenStore = new RedisTokenStore(redisConnectionFactory);
+        tokenStore.setPrefix("xzh-token-key");
+        return tokenStore;
     }
 
+    /**
+     * JWT
+     *
+     * @return
+     */
     @Bean
     protected JwtAccessTokenConverter jwtTokenConverter() {
         JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
-        // 设置签名密钥
+        // 设置JWT签名密钥
         converter.setSigningKey("jwtSigningKey");
         return converter;
     }
 
+    /**
+     * 自定义生成令牌
+     *
+     * @return
+     */
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public TokenEnhancer tokenEnhancer() {
+        return (accessToken, authentication) -> {
+            if (authentication.getUserAuthentication() != null) {
+                Map<String, Object> additionalInformation = new LinkedHashMap<>(4);
+                LoginUser user = (LoginUser) authentication.getUserAuthentication().getPrincipal();
+                additionalInformation.put(SecurityConstants.USER_ID, user.getUserId());
+                additionalInformation.put(SecurityConstants.USERNAME, user.getUsername());
+                ((DefaultOAuth2AccessToken) accessToken).setAdditionalInformation(additionalInformation);
+            }
+            return accessToken;
+        };
     }
 }
