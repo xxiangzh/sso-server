@@ -1,6 +1,5 @@
 package com.xzh.sso.config;
 
-import com.xzh.sso.domain.LoginUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,19 +7,14 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
-import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * 授权服务器配置
@@ -96,9 +90,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 .authenticationManager(authenticationManager)
                 // 指定token存储位置
                 .tokenStore(tokenStore())
-                // 自定义生成令牌
-                .tokenEnhancer(tokenEnhancer())
-                // JWT
+                // JWTToken
                 .tokenEnhancer(jwtTokenConverter())
                 // 是否重复使用 refresh_token
                 .reuseRefreshTokens(false);
@@ -110,7 +102,8 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Bean
     public TokenStore tokenStore() {
         RedisTokenStore tokenStore = new RedisTokenStore(redisConnectionFactory);
-        tokenStore.setPrefix("xzh-token-key");
+        // redis key 前缀
+        tokenStore.setPrefix(SecurityConstants.SSO_TOKEN_KEY);
         return tokenStore;
     }
 
@@ -123,26 +116,9 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     protected JwtAccessTokenConverter jwtTokenConverter() {
         JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
         // 设置JWT签名密钥
-        converter.setSigningKey("jwtSigningKey");
+        converter.setSigningKey(SecurityConstants.JWT_SIGNING_KEY);
+        // JWT加入额外信息
+        converter.setAccessTokenConverter(new CustomAccessTokenConverter());
         return converter;
-    }
-
-    /**
-     * 自定义生成令牌
-     *
-     * @return
-     */
-    @Bean
-    public TokenEnhancer tokenEnhancer() {
-        return (accessToken, authentication) -> {
-            if (authentication.getUserAuthentication() != null) {
-                Map<String, Object> additionalInformation = new LinkedHashMap<>(4);
-                LoginUser user = (LoginUser) authentication.getUserAuthentication().getPrincipal();
-                additionalInformation.put(SecurityConstants.USER_ID, user.getUserId());
-                additionalInformation.put(SecurityConstants.USERNAME, user.getUsername());
-                ((DefaultOAuth2AccessToken) accessToken).setAdditionalInformation(additionalInformation);
-            }
-            return accessToken;
-        };
     }
 }

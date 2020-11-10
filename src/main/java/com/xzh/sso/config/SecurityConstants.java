@@ -4,18 +4,17 @@ package com.xzh.sso.config;
  * 认证相关通用常量
  *
  * @author 向振华
- * @date 2020/09/27 17:43
+ * @date 2020/11/10 10:43
  */
 public class SecurityConstants {
 
     /**
-     * 用户ID
+     * redis SSO token key
      */
-    public static final String USER_ID = "userId";
+    public static final String SSO_TOKEN_KEY = "sso:token:";
 
     /**
-     * 用户名
+     * jwt签名密钥
      */
-    public static final String USERNAME = "username";
-
+    public static final String JWT_SIGNING_KEY = "xiangzhenhua";
 }

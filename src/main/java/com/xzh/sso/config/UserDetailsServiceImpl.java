@@ -1,6 +1,6 @@
 package com.xzh.sso.config;
 
-import com.xzh.sso.domain.LoginUser;
+import com.xzh.sso.domain.UserInfo;
 import com.xzh.sso.domain.User;
 import com.xzh.sso.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +15,12 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 用户详细信息服务
+ *
+ * @author 向振华
+ * @date 2020/11/10 10:43
+ */
 @Service("userDetailsService")
 public class UserDetailsServiceImpl implements UserDetailsService {
 
@@ -36,9 +42,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         List<SimpleGrantedAuthority> authorities = getSimpleGrantedAuthorities();
         // 加密后的密码
         String encodePassword = passwordEncoder.encode(user.getPassword());
-        // 登录用户
-        LoginUser loginUser = new LoginUser(user.getId(), user.getUsername(), encodePassword, authorities);
-        return loginUser;
+        // 登录用户信息
+        UserInfo userInfo = new UserInfo(user.getId(), user.getUsername(), encodePassword, authorities);
+        return userInfo;
     }
 
     private List<SimpleGrantedAuthority> getSimpleGrantedAuthorities() {
