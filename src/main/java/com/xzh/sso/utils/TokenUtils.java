@@ -24,7 +24,7 @@ public class TokenUtils {
         try {
             //解析claims
             claims = Jwts.parser()
-                    .setSigningKey(SecurityConstants.JWT_SIGNING_KEY.getBytes())
+                    .setSigningKey(SecurityConstants.JWT_SIGNING.getBytes())
                     .parseClaimsJws(token)
                     .getBody();
         } catch (ExpiredJwtException e) {

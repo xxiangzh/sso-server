@@ -4,12 +4,12 @@ import com.xzh.sso.common.SecurityConstants;
 import com.xzh.sso.exception.CustomWebResponseExceptionTranslator;
 import com.xzh.sso.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
@@ -18,6 +18,8 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
+
+import javax.sql.DataSource;
 
 /**
  * 授权服务器配置
@@ -30,7 +32,8 @@ import org.springframework.security.oauth2.provider.token.store.redis.RedisToken
 public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdapter {
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    @Qualifier("dataSource")
+    private DataSource dataSource;
 
     @Autowired
     private RedisConnectionFactory redisConnectionFactory;
@@ -63,18 +66,21 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
      */
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
-        clients
-                .inMemory()
-                // 客户端ID
-                .withClient("order-client-id")
-                // 客户端密码
-                .secret(passwordEncoder.encode("order-secret-123456"))
-                // 授权的类型
-                .authorizedGrantTypes("refresh_token", "authorization_code", "password")
-                // 令牌有效期
-                .accessTokenValiditySeconds(120)
-                // 范围
-                .scopes("all");
+        // 读DB客户端详情
+        clients.withClientDetails(new RedisClientDetailsService(dataSource));
+
+//        clients
+//                .inMemory()
+//                // 客户端ID
+//                .withClient("order-client-id")
+//                // 客户端密码
+//                .secret(passwordEncoder.encode("order-secret-123456"))
+//                // 授权的类型
+//                .authorizedGrantTypes("refresh_token", "authorization_code", "password")
+//                // 令牌有效期
+//                .accessTokenValiditySeconds(120)
+//                // 范围
+//                .scopes("all");
     }
 
     /**
@@ -102,13 +108,15 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     }
 
     /**
-     * 基于Redis实现，令牌保存到缓存
+     * 于Redis实现，令牌保存到缓存
+     *
+     * @return
      */
     @Bean
     public TokenStore tokenStore() {
         RedisTokenStore tokenStore = new RedisTokenStore(redisConnectionFactory);
         // redis key 前缀
-        tokenStore.setPrefix("sso:token:");
+        tokenStore.setPrefix(SecurityConstants.TOKEN_KEY);
         return tokenStore;
     }
 
@@ -121,7 +129,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     protected JwtAccessTokenConverter jwtTokenConverter() {
         JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
         // 设置JWT签名密钥
-        converter.setSigningKey(SecurityConstants.JWT_SIGNING_KEY);
+        converter.setSigningKey(SecurityConstants.JWT_SIGNING);
         // JWT加入额外信息
         converter.setAccessTokenConverter(new CustomAccessTokenConverter());
         return converter;

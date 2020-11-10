@@ -11,5 +11,15 @@ public class SecurityConstants {
     /**
      * jwt签名密钥
      */
-    public static final String JWT_SIGNING_KEY = "xiangzhenhua";
+    public static final String JWT_SIGNING = "xiangzhenhua";
+
+    /**
+     * TOKEN KEY
+     */
+    public static final String TOKEN_KEY = "sso:token:";
+
+    /**
+     * 客户端详情 KEY
+     */
+    public static final String CLIENT_KEY = "sso:client:";
 }
