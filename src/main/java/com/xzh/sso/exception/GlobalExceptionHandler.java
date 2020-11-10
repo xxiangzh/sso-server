@@ -1,5 +1,6 @@
-package com.xzh.sso.config;
+package com.xzh.sso.exception;
 
+import com.xzh.sso.common.DataResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,6 +25,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public Object handler(MethodArgumentNotValidException exception) {
         return exception.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+    }
+
+    /**
+     * 业务异常
+     *
+     * @param exception
+     * @return
+     */
+    @ExceptionHandler(value = BusinessException.class)
+    public Object handler(BusinessException exception) {
+        return new DataResult<>(1, exception.getMsg(), null);
     }
 
     /**

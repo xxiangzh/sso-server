@@ -1,14 +1,14 @@
-package com.xzh.sso.config;
+package com.xzh.sso.service;
 
-import com.xzh.sso.domain.UserInfo;
 import com.xzh.sso.domain.User;
+import com.xzh.sso.domain.UserInfo;
+import com.xzh.sso.exception.BusinessException;
 import com.xzh.sso.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -33,13 +33,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) {
-        // 查询用户信息
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException(username + "用户名不存在");
-        }
+        // 获取并校验用户
+        User user = getAndVerifyUser(username);
         // 用户角色应在数据库中获取
-        List<SimpleGrantedAuthority> authorities = getSimpleGrantedAuthorities();
+        List<SimpleGrantedAuthority> authorities = getAuthorities();
         // 加密后的密码
         String encodePassword = passwordEncoder.encode(user.getPassword());
         // 登录用户信息
@@ -47,7 +44,24 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return userInfo;
     }
 
-    private List<SimpleGrantedAuthority> getSimpleGrantedAuthorities() {
+    /**
+     * 获取并校验用户
+     * 这里得BusinessException会转成InternalAuthenticationServiceException
+     *
+     * @param username
+     */
+    private User getAndVerifyUser(String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new BusinessException(username + "用户不存在");
+        }
+        if (user.getDeleteFlag() != 1) {
+            throw new BusinessException(user.getUsername() + "已删除");
+        }
+        return user;
+    }
+
+    private List<SimpleGrantedAuthority> getAuthorities() {
         String role = "ROLE_ADMIN";
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority(role));

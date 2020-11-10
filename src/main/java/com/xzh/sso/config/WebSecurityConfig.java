@@ -1,5 +1,6 @@
 package com.xzh.sso.config;
 
+import com.xzh.sso.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

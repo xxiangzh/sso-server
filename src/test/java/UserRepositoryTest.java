@@ -18,7 +18,7 @@ public class UserRepositoryTest {
 
     @Test
     public void testSaveUser() {
-        User user = User.builder().username("x").password("123456").build();
+        User user = User.builder().username("admin").password("123456").deleteFlag(1).build();
         User save = userRepository.save(user);
         List<User> allUsers = userRepository.findAll();
         System.out.println(allUsers);

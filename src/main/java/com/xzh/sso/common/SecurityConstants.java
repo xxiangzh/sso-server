@@ -1,4 +1,4 @@
-package com.xzh.sso.config;
+package com.xzh.sso.common;
 
 /**
  * 认证相关通用常量
@@ -7,11 +7,6 @@ package com.xzh.sso.config;
  * @date 2020/11/10 10:43
  */
 public class SecurityConstants {
-
-    /**
-     * redis SSO token key
-     */
-    public static final String SSO_TOKEN_KEY = "sso:token:";
 
     /**
      * jwt签名密钥

@@ -1,5 +1,8 @@
 package com.xzh.sso.config;
 
+import com.xzh.sso.common.SecurityConstants;
+import com.xzh.sso.exception.CustomWebResponseExceptionTranslator;
+import com.xzh.sso.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -93,7 +96,9 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 // JWTToken
                 .tokenEnhancer(jwtTokenConverter())
                 // 是否重复使用 refresh_token
-                .reuseRefreshTokens(false);
+                .reuseRefreshTokens(false)
+                // 自定义异常翻译
+                .exceptionTranslator(new CustomWebResponseExceptionTranslator());
     }
 
     /**
@@ -103,7 +108,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     public TokenStore tokenStore() {
         RedisTokenStore tokenStore = new RedisTokenStore(redisConnectionFactory);
         // redis key 前缀
-        tokenStore.setPrefix(SecurityConstants.SSO_TOKEN_KEY);
+        tokenStore.setPrefix("sso:token:");
         return tokenStore;
     }
 
