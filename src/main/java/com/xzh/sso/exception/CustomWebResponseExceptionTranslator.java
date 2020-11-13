@@ -22,21 +22,20 @@ public class CustomWebResponseExceptionTranslator implements WebResponseExceptio
     @Override
     public ResponseEntity translate(Exception e) {
         log.warn("登录失败: ", e);
-        DataResult dataResult = new DataResult();
-        dataResult.setCode(1);
+        String message;
         if (e instanceof BusinessException || e.getCause() instanceof BusinessException) {
-            dataResult.setMessage(e.getMessage());
+            message = e.getMessage();
         } else if (e instanceof InternalAuthenticationServiceException) {
-            dataResult.setMessage("身份验证失败");
+            message = "身份验证失败";
         } else if (e instanceof InvalidGrantException) {
-            dataResult.setMessage("用户名或密码错误");
+            message = "用户名或密码错误";
         } else if (e instanceof InvalidTokenException) {
-            dataResult.setMessage("Token无效或过期");
+            message = "Token无效或过期";
         } else if (e instanceof UnsupportedGrantTypeException) {
-            dataResult.setMessage("不支持的授予类型");
+            message = "不支持的授予类型";
         } else {
-            dataResult.setMessage("登录失败");
+            message = "登录失败";
         }
-        return ResponseEntity.ok(dataResult);
+        return ResponseEntity.ok(DataResult.fail(message));
     }
 }

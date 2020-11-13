@@ -1,14 +1,14 @@
 package com.xzh.sso.common;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
+/**
+ * 通用返回类
+ *
+ * @author 向振华
+ * @date 2020/11/10 10:43
+ */
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class DataResult<T> {
 
     /**
@@ -20,4 +20,17 @@ public class DataResult<T> {
 
     private T data;
 
+    private DataResult(int code, String message, T data) {
+        this.code = code;
+        this.message = message;
+        this.data = data;
+    }
+
+    public static <T> DataResult<T> success(T data) {
+        return new DataResult<>(0, "success", data);
+    }
+
+    public static DataResult<Object> fail(String message) {
+        return new DataResult<>(1, message, null);
+    }
 }
