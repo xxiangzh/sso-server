@@ -53,7 +53,7 @@ public class OAuth2Controller {
     }
 
     @GetMapping("/check_token")
-    public DataResult<Object> getKey(@RequestParam("token") String value) {
+    public DataResult<Object> checkToken(@RequestParam("token") String value) {
         return DataResult.success(checkTokenEndpoint.checkToken(value));
     }
 
