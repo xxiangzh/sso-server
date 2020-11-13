@@ -23,7 +23,7 @@ public class CustomWebResponseExceptionTranslator implements WebResponseExceptio
     public ResponseEntity translate(Exception e) {
         log.warn("登录失败: ", e);
         String message;
-        if (e instanceof BusinessException || e.getCause() instanceof BusinessException) {
+        if (e instanceof AuthException || e.getCause() instanceof AuthException) {
             message = e.getMessage();
         } else if (e instanceof InternalAuthenticationServiceException) {
             message = "身份验证失败";

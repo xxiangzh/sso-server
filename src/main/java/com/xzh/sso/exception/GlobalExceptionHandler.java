@@ -48,6 +48,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     public Object handler(Exception exception) {
         log.error("未知异常: ", exception);
+
         return DataResult.fail("系统繁忙，请稍后重试");
     }
 }
