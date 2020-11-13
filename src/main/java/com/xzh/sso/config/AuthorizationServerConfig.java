@@ -2,6 +2,7 @@ package com.xzh.sso.config;
 
 import com.xzh.sso.common.SecurityConstants;
 import com.xzh.sso.exception.CustomWebResponseExceptionTranslator;
+import com.xzh.sso.granttype.ResourceOwnerSmsTokenGranter;
 import com.xzh.sso.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,11 +16,20 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.provider.CompositeTokenGranter;
+import org.springframework.security.oauth2.provider.OAuth2RequestFactory;
+import org.springframework.security.oauth2.provider.TokenGranter;
+import org.springframework.security.oauth2.provider.password.ResourceOwnerPasswordTokenGranter;
+import org.springframework.security.oauth2.provider.token.AuthorizationServerTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * 授权服务器配置
@@ -91,7 +101,10 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
      */
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
+        List<TokenGranter> tokenGranters = getTokenGranters(endpoints.getTokenServices(), endpoints.getClientDetailsService(), endpoints.getOAuth2RequestFactory());
         endpoints
+                // 登录模式
+                .tokenGranter(new CompositeTokenGranter(tokenGranters))
                 // 请求方式
                 .allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST)
                 // 用户账号密码认证
@@ -106,6 +119,26 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 .reuseRefreshTokens(false)
                 // 自定义异常翻译
                 .exceptionTranslator(new CustomWebResponseExceptionTranslator());
+    }
+
+    /**
+     * 获取登录类型
+     *
+     * @param tokenServices
+     * @param clientDetailsService
+     * @param requestFactory
+     * @return
+     */
+    private List<TokenGranter> getTokenGranters(
+            AuthorizationServerTokenServices tokenServices,
+            ClientDetailsService clientDetailsService,
+            OAuth2RequestFactory requestFactory) {
+        return new ArrayList<>(Arrays.asList(
+                // 内置的密码模式登录
+                new ResourceOwnerPasswordTokenGranter(authenticationManager, tokenServices, clientDetailsService, requestFactory),
+                // 短信验证码登录
+                new ResourceOwnerSmsTokenGranter(tokenServices, clientDetailsService, requestFactory)
+        ));
     }
 
     /**
