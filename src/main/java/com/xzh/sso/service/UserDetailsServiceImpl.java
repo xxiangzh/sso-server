@@ -60,7 +60,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new BusinessException("用户已删除");
         }
         if (StringUtils.isBlank(user.getPassword())){
-            throw new BusinessException("密码尚未初始化，请用手机验证码登录");
+            throw new BusinessException("密码尚未初始化");
         }
         return user;
     }
