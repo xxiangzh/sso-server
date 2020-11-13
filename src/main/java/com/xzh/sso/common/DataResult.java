@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DataResult<T> {
 
+    /**
+     * 状态码（0：成功，1：失败）
+     */
     private int code;
 
     private String message;

@@ -4,6 +4,7 @@ import com.xzh.sso.domain.User;
 import com.xzh.sso.domain.UserInfo;
 import com.xzh.sso.exception.BusinessException;
 import com.xzh.sso.repository.UserRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -53,16 +54,19 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private User getAndVerifyUser(String username) {
         User user = userRepository.findByUsername(username);
         if (user == null) {
-            throw new BusinessException(username + "用户不存在");
+            throw new BusinessException("用户不存在");
         }
         if (user.getDeleteFlag() != 1) {
-            throw new BusinessException(user.getUsername() + "已删除");
+            throw new BusinessException("用户已删除");
+        }
+        if (StringUtils.isBlank(user.getPassword())){
+            throw new BusinessException("密码尚未初始化，请用手机验证码登录");
         }
         return user;
     }
 
     private List<SimpleGrantedAuthority> getAuthorities() {
-        String role = "ROLE_ADMIN";
+        String role = "ROLE_DEMO";
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority(role));
         return authorities;

@@ -25,7 +25,8 @@ public class RedisClientDetailsService extends JdbcClientDetailsService {
     }
 
     @Override
-    @Cacheable(value = SecurityConstants.CLIENT_KEY, key = "#clientId", unless = "#result == null")
+    // 开启@Cacheable需要加入在启动类加@EnableCaching
+    //@Cacheable(value = SecurityConstants.CLIENT_KEY, key = "#clientId", unless = "#result == null")
     public ClientDetails loadClientByClientId(String clientId) {
         return super.loadClientByClientId(clientId);
     }

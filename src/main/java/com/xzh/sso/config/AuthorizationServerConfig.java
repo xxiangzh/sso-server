@@ -45,17 +45,17 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     private AuthenticationManager authenticationManager;
 
     /**
-     * 配置令牌端点(Token Endpoint)的安全约束
+     * 配置令牌端点(内置的/oauth/* 接口)的安全约束
      *
      * @param security
      */
     @Override
     public void configure(AuthorizationServerSecurityConfigurer security) {
-        security.allowFormAuthenticationForClients();
-        // 开启/oauth/token_key验证端口无权限访问
-        security.tokenKeyAccess("isAuthenticated()");
-        // 开启/oauth/check_token验证端口认证权限访问
-        security.checkTokenAccess("permitAll()");
+        security
+                // 允许访问/oauth/token授权接口
+                .allowFormAuthenticationForClients()
+                // 开启/oauth/check_token访问
+                .checkTokenAccess("permitAll()");
     }
 
     /**
@@ -69,14 +69,15 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
         // 读DB客户端详情
         clients.withClientDetails(new RedisClientDetailsService(dataSource));
 
+        // 客户端详情配置
 //        clients
 //                .inMemory()
 //                // 客户端ID
 //                .withClient("order-client-id")
 //                // 客户端密码
-//                .secret(passwordEncoder.encode("order-secret-123456"))
+//                .secret(passwordEncoder.encode("123456"))
 //                // 授权的类型
-//                .authorizedGrantTypes("refresh_token", "authorization_code", "password")
+//                .authorizedGrantTypes("password", "refresh_token")
 //                // 令牌有效期
 //                .accessTokenValiditySeconds(120)
 //                // 范围
@@ -101,7 +102,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 .tokenStore(tokenStore())
                 // JWTToken
                 .tokenEnhancer(jwtTokenConverter())
-                // 是否重复使用 refresh_token
+                // 是否重复使用refresh_token
                 .reuseRefreshTokens(false)
                 // 自定义异常翻译
                 .exceptionTranslator(new CustomWebResponseExceptionTranslator());

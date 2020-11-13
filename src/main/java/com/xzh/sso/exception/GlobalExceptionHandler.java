@@ -24,7 +24,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public Object handler(MethodArgumentNotValidException exception) {
-        return exception.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+        String message = exception.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+        return new DataResult<>(1, message, null);
     }
 
     /**
@@ -47,6 +48,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     public Object handler(Exception exception) {
         log.error("未知异常: ", exception);
-        return exception.getMessage();
+        return new DataResult<>(1, "系统繁忙，请稍后重试", null);
     }
 }
