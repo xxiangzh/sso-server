@@ -25,7 +25,7 @@ public class User {
     @Column(nullable = false, columnDefinition = "varchar(15) comment '用户名'", unique = true)
     private String username;
 
-    @Column(nullable = false, columnDefinition = "varchar(15) comment '密码'")
+    @Column(nullable = false, columnDefinition = "varchar(255) comment '密码'")
     private String password;
 
     @Column(nullable = false, columnDefinition = "int(11) DEFAULT 1 COMMENT '删除标记（1：未删除，2：已删除）'", unique = true)

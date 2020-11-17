@@ -38,7 +38,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = getAndVerifyUser(username);
         // 用户角色应在数据库中获取
         List<SimpleGrantedAuthority> authorities = getAuthorities();
-        // 加密后的密码
+        // 加密后的密码，注意：如果数据库存的是encode密码，这里不需再加密
         String encodePassword = passwordEncoder.encode(user.getPassword());
         // 登录用户信息
         UserInfo userInfo = new UserInfo(user.getId(), user.getUsername(), encodePassword, authorities);
